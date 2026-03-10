@@ -352,6 +352,13 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.hero-3d-scene.is-dragging {
+    cursor: grabbing;
 }
 
 .hero-3d-scene::before {
@@ -370,6 +377,7 @@ a:hover {
     height: 190px;
     transform-style: preserve-3d;
     animation: rotateCube 14s linear infinite;
+    will-change: transform;
 }
 
 .cube-face {
@@ -1414,3 +1422,4 @@ section {
         padding: 3rem 0;
     }
 }
+
