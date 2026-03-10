@@ -36,6 +36,130 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ==========================================
+    // INTERACTIVE HERO CUBE
+    // ==========================================
+    const cubeScene = document.querySelector('.hero-3d-scene');
+    const cube = document.querySelector('.devops-cube');
+
+    if (cubeScene && cube) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const dragSensitivity = 0.35;
+        const friction = prefersReducedMotion ? 0.86 : 0.94;
+        const idleSpin = prefersReducedMotion ? 0.02 : 0.08;
+        const maxVelocity = 4;
+
+        let rotateX = -14;
+        let rotateY = 18;
+        let velocityX = 0;
+        let velocityY = idleSpin;
+
+        let isDragging = false;
+        let activePointerId = null;
+        let lastX = 0;
+        let lastY = 0;
+        let lastTime = 0;
+
+        cube.style.animation = 'none';
+
+        function clampVelocity(value) {
+            if (value > maxVelocity) return maxVelocity;
+            if (value < -maxVelocity) return -maxVelocity;
+            return value;
+        }
+
+        function renderCube() {
+            cube.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        }
+
+        function animateCube() {
+            if (!isDragging) {
+                rotateX += velocityX;
+                rotateY += velocityY;
+
+                velocityX *= friction;
+                velocityY *= friction;
+
+                if (Math.abs(velocityX) < 0.002) {
+                    velocityX = 0;
+                }
+
+                if (Math.abs(velocityY) < idleSpin) {
+                    velocityY = idleSpin;
+                }
+            }
+
+            renderCube();
+            requestAnimationFrame(animateCube);
+        }
+
+        function endDrag(event) {
+            if (event.pointerId !== activePointerId) {
+                return;
+            }
+
+            isDragging = false;
+            activePointerId = null;
+            cubeScene.classList.remove('is-dragging');
+
+            if (cubeScene.hasPointerCapture(event.pointerId)) {
+                cubeScene.releasePointerCapture(event.pointerId);
+            }
+        }
+
+        cubeScene.addEventListener('pointerdown', (event) => {
+            if (event.pointerType === 'mouse' && event.button !== 0) {
+                return;
+            }
+
+            isDragging = true;
+            activePointerId = event.pointerId;
+            lastX = event.clientX;
+            lastY = event.clientY;
+            lastTime = performance.now();
+
+            cubeScene.classList.add('is-dragging');
+            cubeScene.setPointerCapture(event.pointerId);
+        });
+
+        cubeScene.addEventListener('pointermove', (event) => {
+            if (!isDragging || event.pointerId !== activePointerId) {
+                return;
+            }
+
+            const now = performance.now();
+            const elapsed = Math.max(now - lastTime, 1);
+
+            const deltaX = event.clientX - lastX;
+            const deltaY = event.clientY - lastY;
+
+            rotateY += deltaX * dragSensitivity;
+            rotateX -= deltaY * dragSensitivity;
+
+            const frameFactor = 16.67 / elapsed;
+            velocityY = clampVelocity(deltaX * dragSensitivity * frameFactor);
+            velocityX = clampVelocity(-deltaY * dragSensitivity * frameFactor);
+
+            lastX = event.clientX;
+            lastY = event.clientY;
+            lastTime = now;
+
+            renderCube();
+        });
+
+        cubeScene.addEventListener('pointerup', endDrag);
+        cubeScene.addEventListener('pointercancel', endDrag);
+        cubeScene.addEventListener('lostpointercapture', () => {
+            isDragging = false;
+            activePointerId = null;
+            cubeScene.classList.remove('is-dragging');
+        });
+
+        renderCube();
+        requestAnimationFrame(animateCube);
+    }
+
+    // ==========================================
     // SCROLL ANIMATION
     // ==========================================
     const observerOptions = {
